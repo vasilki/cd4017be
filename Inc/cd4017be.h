@@ -13,10 +13,10 @@
 /*Init CD4017BE and pins*/
 void cd4017be_Init(GPIO_TypeDef *par_line,uint16_t par_pin_DS, uint16_t par_pin_STCP, uint16_t par_pin_SHCP);
 
-/*Set outputs of CD4017BE*/
-void cd4017be_WriteByte(uint8_t par_byte);
+/*Strobbing of CD4017BE*/
+void cd4017be_Strobbing(uint8_t par_B_front);
 
-/*Reset outputs of CD4017BE without using MR-pin*/
-void cd4017be_Reset(void);
+/*Reset outputs of CD4017BE by using MR-pin*/
+void cd4017be_ResetMR(void);
 
 #endif /* CD4017BE_H_ */

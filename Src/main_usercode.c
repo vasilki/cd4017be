@@ -9,7 +9,7 @@
 #include "cd4017be.h"
 
 extern UART_HandleTypeDef huart1; /*declared in main.c*/
-extern ADC_HandleTypeDef hadc1; /*declared in main.c*/
+//extern ADC_HandleTypeDef hadc1; /*declared in main.c*/
 extern TIM_HandleTypeDef htim9;
 extern TIM_HandleTypeDef htim10;
 static T_LCD_GPIO_Parameters loc_LCD_GPIO_Parameters;
@@ -19,7 +19,6 @@ static void main_heartbeat(void);
   
 void main_usercode(void)
 {
-  unsigned int loc_adc_val=0;
   unsigned char loc_B_button_state = 0;
   uint8_t loc_buff[20];
   unsigned int loc_time;
@@ -27,8 +26,7 @@ void main_usercode(void)
   unsigned int loc_time_sec;
   static unsigned int loc_prev_time_ms=0;
   static unsigned int loc_prev_time_sec=0;
-  static unsigned char loc_B_LCD_Print = 0;
-  uint8_t loc_srbyte = 0;
+  uint8_t loc_srbyte = 1;
 
   main_Init();
 
@@ -43,25 +41,8 @@ void main_usercode(void)
   /*Running LED*/
   if(loc_time_sec != loc_prev_time_sec)
   {
-    switch(loc_time_sec % 4)
-    {
-      case 0:
-        loc_srbyte = 0b00000001;
-        break;
-      case 1:
-        loc_srbyte = 0b00000010;
-        break;
-      case 2:
-        loc_srbyte = 0b00000100;
-        break;
-      case 3:
-        loc_srbyte = 0b00001000;
-        break;
-      default:
-        /*nothing to do*/
-        break;
-    }
-    cd4017be_WriteByte(loc_srbyte);
+ 
+    cd4017be_Strobbing(loc_srbyte);
   }
   else
   {
@@ -131,11 +112,11 @@ void main_Init(void)
     lcd_Init(loc_LCD_GPIO_Parameters);
     lcd_ClearLCDScreen();
     lcd_SetCursor(0,0);
-    lcd_PrintStr("74HC595");
+    lcd_PrintStr("CD4017BE");
 
     loc_B_IsFirstTime = 1;
     
-    /*74HC595 init*/
+    /*CD4017BE init*/
     cd4017be_Init(GPIOC,GPIO_PIN_10,GPIO_PIN_11,GPIO_PIN_12);
     
   }

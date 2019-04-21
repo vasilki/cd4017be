@@ -8,83 +8,82 @@
 
 #include "cd4017be.h"
 #include "dwt_stm32_delay.h"
-#include "uart.h"
 
 static GPIO_TypeDef *GL_GPIO_LINE;
-static uint16_t GL_PIN_DS;
-static uint16_t GL_PIN_STCP;
-static uint16_t GL_PIN_SHCP;
+static uint16_t GL_PIN_CLOCK;
+static uint16_t GL_PIN_EN;
+static uint16_t GL_PIN_MR;
 
-#define K_DELAY 50
-#define K_OUTS 8
+#define K_DELAY 10
 
-
-void cd4017be_WriteByte(uint8_t par_byte);
-void cd4017be_Reset(void);
-
-void cd4017be_Init(GPIO_TypeDef *par_line,uint16_t par_pin_DS, uint16_t par_pin_STCP, uint16_t par_pin_SHCP)
+void cd4017be_Init(GPIO_TypeDef *par_line,uint16_t par_pin_CLOCK, uint16_t par_pin_EN, uint16_t par_pin_MR)
 {
 
-	GL_GPIO_LINE = par_line;
-  GL_PIN_DS = par_pin_DS;
-  GL_PIN_STCP = par_pin_STCP;
-  GL_PIN_SHCP = par_pin_SHCP;
+  GL_GPIO_LINE = par_line;
+  GL_PIN_CLOCK = par_pin_CLOCK;
+  GL_PIN_EN = par_pin_EN;
+  GL_PIN_MR = par_pin_MR;
   
   /*Reset handle-pins*/
-  HAL_GPIO_WritePin(GL_GPIO_LINE,GL_PIN_DS,GPIO_PIN_RESET);
-  HAL_GPIO_WritePin(GL_GPIO_LINE,GL_PIN_STCP,GPIO_PIN_RESET);
-  HAL_GPIO_WritePin(GL_GPIO_LINE,GL_PIN_SHCP,GPIO_PIN_RESET);
-	DWT_Delay_us(K_DELAY);
+  HAL_GPIO_WritePin(GL_GPIO_LINE,GL_PIN_CLOCK,GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GL_GPIO_LINE,GL_PIN_EN,GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GL_GPIO_LINE,GL_PIN_MR,GPIO_PIN_RESET);
+  DWT_Delay_us(K_DELAY);
   
-  /*Reset outputs pins (because there is not used MR-pin of cd4017be for reset*/
-  cd4017be_Reset();
+  cd4017be_ResetMR();
   
   return;
 }
 
-void cd4017be_Reset(void)
-{
-  /*Reset outputs pins (because there is not used MR-pin of cd4017be for reset*/
-  cd4017be_WriteByte(0x0);
-  DWT_Delay_us(K_DELAY);
-  
-  return;
-}
-  
 void cd4017be_ResetMR(void)
 {
-  /*there is not used MR-pin of cd4017be for reset*/
+  HAL_GPIO_WritePin(GL_GPIO_LINE,GL_PIN_MR,GPIO_PIN_SET);
+  DWT_Delay_us(K_DELAY);
+  HAL_GPIO_WritePin(GL_GPIO_LINE,GL_PIN_MR,GPIO_PIN_RESET);
+  DWT_Delay_us(K_DELAY);
 
   return;
 }
+  
 
-void cd4017be_WriteByte(uint8_t par_byte)
+void cd4017be_Strobbing(uint8_t par_B_front)
 {
-  uint32_t loc_count;
-  uint8_t loc_bit;
+  static uint8_t loc_B_prev_front = 0;
   
-  for(loc_count = 0; loc_count < K_OUTS; loc_count++)
-  {    
-    loc_bit = (par_byte >> (K_OUTS - 1 - loc_count)) & 0x1;
-    /*push bits in reverse order*/
-    if(loc_bit != 0)
-    {
-      HAL_GPIO_WritePin(GL_GPIO_LINE,GL_PIN_DS,GPIO_PIN_SET);
-    }
-    else
-    {
-      HAL_GPIO_WritePin(GL_GPIO_LINE,GL_PIN_DS,GPIO_PIN_RESET);
-    }
-    HAL_GPIO_WritePin(GL_GPIO_LINE,GL_PIN_SHCP,GPIO_PIN_SET);
-    DWT_Delay_us(K_DELAY);
-    HAL_GPIO_WritePin(GL_GPIO_LINE,GL_PIN_SHCP,GPIO_PIN_RESET);
+  if(par_B_front != 0)
+  {
+    HAL_GPIO_WritePin(GL_GPIO_LINE,GL_PIN_EN,GPIO_PIN_RESET);
   }
-  /*store bits*/
-  HAL_GPIO_WritePin(GL_GPIO_LINE,GL_PIN_STCP,GPIO_PIN_SET);
+  else
+  {
+    HAL_GPIO_WritePin(GL_GPIO_LINE,GL_PIN_CLOCK,GPIO_PIN_SET);
+  }
+
+  if(loc_B_prev_front != par_B_front)
+  {
+    DWT_Delay_us(K_DELAY);
+  }
+  else
+  {
+    /*nothing to do*/
+  }
+
+  if(par_B_front != 0)
+  {
+    HAL_GPIO_WritePin(GL_GPIO_LINE,GL_PIN_CLOCK,GPIO_PIN_SET);
+    DWT_Delay_us(K_DELAY);
+    HAL_GPIO_WritePin(GL_GPIO_LINE,GL_PIN_CLOCK,GPIO_PIN_RESET);
+  }
+  else
+  {
+    HAL_GPIO_WritePin(GL_GPIO_LINE,GL_PIN_EN,GPIO_PIN_SET);
+    DWT_Delay_us(K_DELAY);
+    HAL_GPIO_WritePin(GL_GPIO_LINE,GL_PIN_EN,GPIO_PIN_RESET);
+  }
+
   DWT_Delay_us(K_DELAY);
-  HAL_GPIO_WritePin(GL_GPIO_LINE,GL_PIN_STCP,GPIO_PIN_RESET);
-  DWT_Delay_us(K_DELAY); 
-  
+  loc_B_prev_front = par_B_front;
+
   return;
 }
 
