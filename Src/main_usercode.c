@@ -11,8 +11,7 @@
 
 extern UART_HandleTypeDef huart1; /*declared in main.c*/
 //extern ADC_HandleTypeDef hadc1; /*declared in main.c*/
-extern TIM_HandleTypeDef htim9;
-extern TIM_HandleTypeDef htim10;
+
 static T_LCD_GPIO_Parameters loc_LCD_GPIO_Parameters;
 
 static void main_Init(void);
@@ -33,7 +32,7 @@ void main_usercode(void)
 
   tim_UpdatePeriod();
   loc_time = tim_GetPeriod();
-  //loc_time_sec = tim_GetTimeFromStartSEC();
+  loc_time_sec = tim_GetTimeFromStartSEC();
   
   
   /*HeartBeat*/
@@ -61,6 +60,8 @@ void main_usercode(void)
     lcd_Return();
     lcd_SetCursor(1,0);
     lcd_PrintStr((char*)loc_buff);
+    
+    UART_PRINTFINTEGER(HAL_RCC_GetSysClockFreq()+1,"DEC")
   }
   else
   {
@@ -98,8 +99,7 @@ void main_Init(void)
     button_SetActiveButtons('B',6);
 
     /*TIM init*/
-    tim_StartTimer(&htim9);
-    tim_StartTimer(&htim10);
+    tim_InitTimer();
 
     /*DWT init*/
     DWT_Delay_Init();
