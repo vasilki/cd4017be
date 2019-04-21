@@ -32,7 +32,6 @@ void main_usercode(void)
 
   tim_UpdatePeriod();
   loc_time = tim_GetPeriod();
-  loc_time_ms = tim_GetTimeFromStartMS();
   loc_time_sec = tim_GetTimeFromStartSEC();
   
   /*HeartBeat*/
@@ -50,10 +49,12 @@ void main_usercode(void)
   }
 
  
+  loc_time_ms = tim_GetTimeFromStartMS();
   
-  if(loc_time_sec != loc_prev_time_sec)
+ // if(loc_time_sec != loc_prev_time_sec)
+  if(loc_time_ms != loc_prev_time_ms)
   {
-    sprintf(loc_buff,"%04d %04x",loc_time_sec,loc_srbyte);
+    sprintf(loc_buff,"%04d %04d.%01d",loc_time_sec,loc_time_ms/1000,(loc_time_ms % 1000)/100);
     //lcd_ClearLCDScreen();
     lcd_Return();
     lcd_SetCursor(1,0);
@@ -77,7 +78,8 @@ void main_usercode(void)
   }
 
   loc_prev_time_sec = loc_time_sec;
-
+  loc_prev_time_ms = loc_time_ms;
+  
   return;
 }
 
