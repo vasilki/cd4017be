@@ -7,6 +7,7 @@
 #include "uart.h"
 #include "lcd_1602.h"
 #include "cd4017be.h"
+#include "dwt_stm32_delay.h"
 
 extern UART_HandleTypeDef huart1; /*declared in main.c*/
 //extern ADC_HandleTypeDef hadc1; /*declared in main.c*/
@@ -32,7 +33,8 @@ void main_usercode(void)
 
   tim_UpdatePeriod();
   loc_time = tim_GetPeriod();
-  loc_time_sec = tim_GetTimeFromStartSEC();
+  //loc_time_sec = tim_GetTimeFromStartSEC();
+  
   
   /*HeartBeat*/
   main_heartbeat();
@@ -50,9 +52,9 @@ void main_usercode(void)
 
  
   loc_time_ms = tim_GetTimeFromStartMS();
-  
- // if(loc_time_sec != loc_prev_time_sec)
-  if(loc_time_ms != loc_prev_time_ms)
+
+// if(loc_time_sec != loc_prev_time_sec)
+  if(((loc_time_ms % 1000)/100) != ((loc_prev_time_ms % 1000)/100))
   {
     sprintf(loc_buff,"%04d %04d.%01d",loc_time_sec,loc_time_ms/1000,(loc_time_ms % 1000)/100);
     //lcd_ClearLCDScreen();
@@ -99,6 +101,9 @@ void main_Init(void)
     tim_StartTimer(&htim9);
     tim_StartTimer(&htim10);
 
+    /*DWT init*/
+    DWT_Delay_Init();
+    
     /*UART init*/
     uart_Init(&huart1);
     uart_PrintfBuildVersion(&huart1);
